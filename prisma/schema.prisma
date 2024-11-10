@@ -12,3 +12,91 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MaterialType {
+  CELIK
+  METAL
+  ALUMINYUM
+  BAKIR
+  PLASTIK
+  LASTIK
+  KAPLAMA
+}
+
+enum Unit {
+  KG
+  M
+  LT
+  PCS
+  CM
+  MM
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  username String  @unique @db.VarChar(50)
+  hash     String
+  hashedRt String?
+
+  userDetail UserDetail?
+}
+
+model UserDetail {
+  id           Int      @id @default(autoincrement())
+  firstname    String   @db.VarChar(50)
+  lastname     String   @db.VarChar(50)
+  phoneNumber  String   @db.VarChar(10)
+  birthDate    DateTime
+  gender       Gender
+  address      String   @db.VarChar(255)
+  profileImage String?  @db.VarChar(255)
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+}
+
+model RawMaterial {
+  id                 Int          @id @default(autoincrement())
+  name               String       @db.VarChar(255)
+  materialType       MaterialType
+  unit               Unit
+  quantityInStock    Float
+  pricePerUnit       Float
+  supplier           String       @db.VarChar(255)
+  criticalStockLevel Float
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  products ProductMaterial[]
+}
+
+model Product {
+  id                 Int               @id @default(autoincrement())
+  name               String            @db.VarChar(255)
+  category           String            @db.VarChar(100)
+  quantityInStock    Int
+  criticalStockLevel Int
+  productionCost     Float
+  price              Float
+  materials          ProductMaterial[]
+}
+
+model ProductMaterial {
+  id           Int   @id @default(autoincrement())
+  productId    Int?
+  materialId   Int
+  quantityUsed Float
+
+  product     Product?    @relation(fields: [productId], references: [id])
+  rawMaterial RawMaterial @relation(fields: [materialId], references: [id])
+
+  @@unique([productId, materialId])
+}
